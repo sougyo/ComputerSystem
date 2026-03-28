@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU Visualizer - コンピュータの仕組みを可視化</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <canvas id="mainCanvas"></canvas>
+
+    <!-- 左サイドバー: レジスタ・状態表示 -->
+    <div id="sidebar" class="panel">
+        <h2>CPU State</h2>
+        <div class="section">
+            <h3>Registers</h3>
+            <div class="reg-row"><span class="reg-name">A</span><span id="regA" class="reg-val">0x00</span><span id="regA-bin" class="reg-bin">00000000</span></div>
+            <div class="reg-row"><span class="reg-name">B</span><span id="regB" class="reg-val">0x00</span><span id="regB-bin" class="reg-bin">00000000</span></div>
+            <div class="reg-row"><span class="reg-name">PC</span><span id="regPC" class="reg-val">0x00</span><span id="regPC-bin" class="reg-bin">00000000</span></div>
+            <div class="reg-row"><span class="reg-name">IR</span><span id="regIR" class="reg-val">0x0000</span><span id="regIR-bin" class="reg-bin">----------------</span></div>
+        </div>
+        <div class="section">
+            <h3>Flags</h3>
+            <div class="flag-row">
+                <span class="flag" id="flagZ">Z=0</span>
+                <span class="flag" id="flagC">C=0</span>
+                <span class="flag" id="flagN">N=0</span>
+            </div>
+        </div>
+        <div class="section">
+            <h3>Current Instruction</h3>
+            <div id="currentInstr" class="instr-display">---</div>
+            <div id="currentPhase" class="phase-display">IDLE</div>
+        </div>
+        <div class="section">
+            <h3>Zoom Level</h3>
+            <div id="zoomInfo" class="zoom-display">1.00x</div>
+            <div id="zoomHint" class="zoom-hint">Macro View: CPU Components</div>
+        </div>
+    </div>
+
+    <!-- 下部コントロール -->
+    <div id="controls" class="panel">
+        <button id="btnStep" title="1ステップ実行">Step</button>
+        <button id="btnRun" title="連続実行">Run</button>
+        <button id="btnPause" title="一時停止" disabled>Pause</button>
+        <button id="btnReset" title="リセット">Reset</button>
+        <label>Speed: <input type="range" id="speedSlider" min="1" max="10" value="5"></label>
+        <span id="speedLabel">5</span>
+        <button id="btnFitView" title="全体表示">Fit View</button>
+    </div>
+
+    <!-- 右サイドバー: プログラムエディタ -->
+    <div id="programPanel" class="panel">
+        <h2>Program</h2>
+        <select id="programSelect">
+            <option value="add">Addition (A+B)</option>
+            <option value="count">Count Up</option>
+            <option value="logic">Logic Ops</option>
+            <option value="fibonacci">Fibonacci</option>
+            <option value="custom">Custom</option>
+        </select>
+        <div id="programListing"></div>
+        <textarea id="customProgram" style="display:none" placeholder="LOAD_A 5&#10;LOAD_B 3&#10;ADD&#10;HLT"></textarea>
+        <button id="btnLoad">Load Program</button>
+    </div>
+
+    <!-- メモリビューア -->
+    <div id="memoryPanel" class="panel">
+        <h2>Memory</h2>
+        <div id="memoryView"></div>
+    </div>
+
+    <!-- ヘルプオーバーレイ -->
+    <div id="helpOverlay" style="display:none">
+        <div class="help-content">
+            <h2>CPU Visualizer - 操作方法</h2>
+            <ul>
+                <li><strong>マウスホイール:</strong> ズーム (マクロ ↔ ミクロ)</li>
+                <li><strong>ドラッグ:</strong> 画面移動</li>
+                <li><strong>Step:</strong> 1命令ずつ実行</li>
+                <li><strong>Run/Pause:</strong> 連続実行/停止</li>
+                <li><strong>Reset:</strong> CPUリセット</li>
+            </ul>
+            <p>ズームアウト → CPU全体のブロック図<br>
+               ズームイン → 論理ゲート (AND, OR, NAND...) と信号</p>
+            <button onclick="document.getElementById('helpOverlay').style.display='none'">閉じる</button>
+        </div>
+    </div>
+
+    <button id="btnHelp" title="ヘルプ">?</button>
+
+    <script src="js/circuit.js"></script>
+    <script src="js/builder.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
