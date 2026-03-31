@@ -193,6 +193,11 @@ const App = (() => {
         halted = false;
         memory.fill(0);
         circuit.resetAll();
+        setRegisterOutputs(cpu.meta.regA, 0);
+        setRegisterOutputs(cpu.meta.regB, 0);
+        setRegisterOutputs(cpu.meta.ir, 0);
+        setRegisterOutputs(cpu.meta.irL, 0);
+        setRegisterOutputs(cpu.meta.pc.children[0], 0);
     }
 
     function stepCPU() {
@@ -317,6 +322,10 @@ const App = (() => {
 
         // Final circuit evaluation
         circuit.evaluate();
+
+        // Update IR display (must be after all evaluate() calls to avoid NAND overwrite)
+        setRegisterOutputs(cpu.meta.ir, irOpcode);
+        setRegisterOutputs(cpu.meta.irL, irOperand);
 
         updateUI();
     }
