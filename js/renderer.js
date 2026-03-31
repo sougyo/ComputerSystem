@@ -321,7 +321,7 @@ class Renderer {
 
             // Draw internal wires
             for (const wire of comp.wires) {
-                this._drawWireSegments(wire, absX, absY);
+                this._drawWireSegments(wire, absX, absY, comp);
             }
 
             // Render children
@@ -331,7 +331,7 @@ class Renderer {
 
             // Render gates
             for (const gate of comp.gates) {
-                this._renderGate(gate, absX, absY);
+                this._renderGate(gate, absX, absY, comp);
             }
         } else {
             // Draw as a box
@@ -456,7 +456,7 @@ class Renderer {
     // ========================================
     // Gate rendering
     // ========================================
-    _renderGate(gate, parentAbsX, parentAbsY) {
+    _renderGate(gate, parentAbsX, parentAbsY, parentComp) {
         const ctx = this.ctx;
         const gx = parentAbsX + gate.x;
         const gy = parentAbsY + gate.y;
@@ -485,6 +485,7 @@ class Renderer {
         // Wire to output
         if (gate.output && gate.output.segments) {
             for (const seg of gate.output.segments) {
+                if (parentComp && this._segOutOfBounds(seg, parentComp)) continue;
                 this._drawWireSegment(seg, parentAbsX, parentAbsY, gate.output.value);
             }
         }
@@ -653,10 +654,19 @@ class Renderer {
     // ========================================
     // Wire rendering
     // ========================================
-    _drawWireSegments(wire, parentAbsX, parentAbsY) {
+    _drawWireSegments(wire, parentAbsX, parentAbsY, parentComp) {
         for (const seg of wire.segments) {
+            if (parentComp && this._segOutOfBounds(seg, parentComp)) continue;
             this._drawWireSegment(seg, parentAbsX, parentAbsY, wire.value);
         }
+    }
+
+    _segOutOfBounds(seg, comp) {
+        // If the segment has an owner tag, only draw it from the matching component
+        if (seg.owner !== undefined) {
+            return seg.owner !== comp.id;
+        }
+        return false;
     }
 
     _drawWireSegment(seg, offX, offY, value) {

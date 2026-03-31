@@ -26,11 +26,11 @@ const CPUBuilder = (() => {
         connectGate(xorG, [wA, wB], comp.addWire(createWire(`${name}_sum`)));
         connectGate(andG, [wA, wB], comp.addWire(createWire(`${name}_carry`)));
 
-        // Wire segments for rendering
-        wA.segments = [{ x1: 0, y1: 4, x2: 10, y2: 3 }, { x1: 0, y1: 4, x2: 10, y2: 11 }];
-        wB.segments = [{ x1: 0, y1: 12, x2: 10, y2: 5 }, { x1: 0, y1: 12, x2: 10, y2: 13 }];
-        xorG.output.segments = [{ x1: 16, y1: 3, x2: 24, y2: 4 }];
-        andG.output.segments = [{ x1: 16, y1: 11, x2: 24, y2: 12 }];
+        // Wire segments for rendering (owner: this HA component)
+        wA.segments = [{ x1: 0, y1: 4, x2: 10, y2: 3, owner: comp.id }, { x1: 0, y1: 4, x2: 10, y2: 11, owner: comp.id }];
+        wB.segments = [{ x1: 0, y1: 12, x2: 10, y2: 5, owner: comp.id }, { x1: 0, y1: 12, x2: 10, y2: 13, owner: comp.id }];
+        xorG.output.segments = [{ x1: 16, y1: 3, x2: 24, y2: 4, owner: comp.id }];
+        andG.output.segments = [{ x1: 16, y1: 11, x2: 24, y2: 12, owner: comp.id }];
 
         comp.setInputPin('A', wA, 0, 4);
         comp.setInputPin('B', wB, 0, 12);
@@ -71,15 +71,20 @@ const CPUBuilder = (() => {
         connectGate(orG, [ha1.outputPins['Carry'].wire, ha2.outputPins['Carry'].wire],
             comp.addWire(createWire(`${name}_cout`)));
 
-        // Wire segments
-        wA.segments = [{ x1: 0, y1: 8, x2: 5, y2: 6 }];
-        wB.segments = [{ x1: 0, y1: 16, x2: 5, y2: 14 }];
-        wCin.segments = [{ x1: 0, y1: 32, x2: 5, y2: 32 }];
-        ha1.outputPins['Sum'].wire.segments.push({ x1: 29, y1: 6, x2: 5, y2: 24 });
-        ha1.outputPins['Carry'].wire.segments.push({ x1: 29, y1: 14, x2: 38, y2: 18 });
-        ha2.outputPins['Carry'].wire.segments.push({ x1: 29, y1: 32, x2: 38, y2: 20 });
-        orG.output.segments = [{ x1: 44, y1: 18, x2: 55, y2: 18 }];
-        ha2.outputPins['Sum'].wire.segments.push({ x1: 29, y1: 24, x2: 55, y2: 8 });
+        // Wire segments (owner: this FA component)
+        wA.segments = [{ x1: 0, y1: 8, x2: 5, y2: 6, owner: comp.id }];
+        wB.segments = [{ x1: 0, y1: 16, x2: 5, y2: 14, owner: comp.id }];
+        wCin.segments = [{ x1: 0, y1: 32, x2: 5, y2: 32, owner: comp.id }];
+        ha1.outputPins['Sum'].wire.segments.push({ x1: 29, y1: 6, x2: 5, y2: 24, owner: comp.id });
+        ha1.outputPins['Carry'].wire.segments.push({ x1: 29, y1: 14, x2: 38, y2: 18, owner: comp.id });
+        ha2.outputPins['Carry'].wire.segments.push({ x1: 29, y1: 32, x2: 38, y2: 20, owner: comp.id });
+        orG.output.segments = [{ x1: 44, y1: 18, x2: 55, y2: 18, owner: comp.id }];
+        ha2.outputPins['Sum'].wire.segments.push({ x1: 29, y1: 24, x2: 55, y2: 8, owner: comp.id });
+        // Register HA output wires with FA so FA-owned segments above are drawn in FA context
+        comp.wires.push(ha1.outputPins['Sum'].wire);
+        comp.wires.push(ha1.outputPins['Carry'].wire);
+        comp.wires.push(ha2.outputPins['Carry'].wire);
+        comp.wires.push(ha2.outputPins['Sum'].wire);
 
         comp.setInputPin('A', wA, 0, 8);
         comp.setInputPin('B', wB, 0, 16);
@@ -129,9 +134,10 @@ const CPUBuilder = (() => {
             comp.setOutputPin(`S${i}`, fa.outputPins['Sum'].wire, 5 + i * 58 + 55, 13);
 
             prevCarry = fa.outputPins['Cout'].wire;
-            // Carry chain wire segment
+            // Carry chain wire segment (owner: adder8, drawn from adder8 context)
             if (i < 7) {
-                prevCarry.segments.push({ x1: 5 + i * 58 + 55, y1: 23, x2: 5 + (i + 1) * 58, y2: 37 });
+                prevCarry.segments.push({ x1: 5 + i * 58 + 55, y1: 23, x2: 5 + (i + 1) * 58, y2: 37, owner: comp.id });
+                comp.wires.push(prevCarry);
             }
         }
         comp.setOutputPin('Cout', prevCarry, 480, 45);
