@@ -769,17 +769,37 @@ class Renderer {
                 ctx.fillText(label, mx, my);
             }
 
-            // Animated signal flow on active buses
+            // Animated signal flow on active buses (follows L-shaped path)
             if (active) {
+                // Build the same L-shaped path used for drawing
+                let mx, my;
+                if (Math.abs(x2 - x1) > Math.abs(y2 - y1)) {
+                    mx = x2; my = y1;
+                } else {
+                    mx = x1; my = y2;
+                }
+                const seg1Len = Math.hypot(mx - x1, my - y1);
+                const seg2Len = Math.hypot(x2 - mx, y2 - my);
+                const totalLen = seg1Len + seg2Len;
+                if (totalLen < 1) return;
+
                 const t = (this.time * 1.5) % 1;
-                const len = Math.hypot(x2 - x1, y2 - y1);
-                const dotCount = Math.max(1, Math.floor(len / 30));
+                const dotCount = Math.max(1, Math.floor(totalLen / 30));
+                const dotR = Math.max(0.8, 2 / this.zoom);
                 ctx.fillStyle = '#00ff88';
                 for (let d = 0; d < dotCount; d++) {
                     const dt = ((t + d / dotCount) % 1);
-                    const px = x1 + (x2 - x1) * dt;
-                    const py = y1 + (y2 - y1) * dt;
-                    const dotR = Math.max(0.8, 2 / this.zoom);
+                    const dist = dt * totalLen;
+                    let px, py;
+                    if (dist <= seg1Len) {
+                        const f = dist / seg1Len;
+                        px = x1 + (mx - x1) * f;
+                        py = y1 + (my - y1) * f;
+                    } else {
+                        const f = (dist - seg1Len) / seg2Len;
+                        px = mx + (x2 - mx) * f;
+                        py = my + (y2 - my) * f;
+                    }
                     ctx.beginPath();
                     ctx.arc(px, py, dotR, 0, Math.PI * 2);
                     ctx.fill();
