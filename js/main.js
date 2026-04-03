@@ -229,6 +229,8 @@ const App = (() => {
         let nextPC = pc + 2;
         let writeA = false;
         let writeB = false;
+        let aluOp = false;
+        let subOp = false;
 
         switch (irOpcode) {
             case OP.LOAD_A:
@@ -247,26 +249,25 @@ const App = (() => {
                 memory[irOperand] = regA;
                 break;
             case OP.ADD:
-                result = (regA + regB) & 0xFF;
-                flagC = (regA + regB) > 0xFF ? 1 : 0;
                 writeA = true;
+                aluOp = true;
                 break;
             case OP.SUB:
-                result = (regA - regB) & 0xFF;
-                flagC = regA < regB ? 1 : 0;
                 writeA = true;
+                aluOp = true;
+                subOp = true;
                 break;
             case OP.AND:
-                result = (regA & regB) & 0xFF;
                 writeA = true;
+                aluOp = true;
                 break;
             case OP.OR:
-                result = (regA | regB) & 0xFF;
                 writeA = true;
+                aluOp = true;
                 break;
             case OP.XOR:
-                result = (regA ^ regB) & 0xFF;
                 writeA = true;
+                aluOp = true;
                 break;
             case OP.NOT:
                 result = (~regA) & 0xFF;
@@ -294,6 +295,14 @@ const App = (() => {
         // Drive ALU inputs at gate level
         setALUInputs(regA, regB, irOpcode);
         circuit.evaluate();
+
+        // Read result from gate-level ALU output pins
+        if (aluOp) {
+            const aluOut = readALUOutputs();
+            result = aluOut.result;
+            // For SUB, Cout=1 means no borrow (A>=B), so flagC is inverted
+            flagC = subOp ? (1 - aluOut.cout) : aluOut.cout;
+        }
 
         // === WRITE-BACK ===
         if (writeA) {
@@ -368,6 +377,22 @@ const App = (() => {
         if (pinOp0) pinOp0.wire.setValue(op0);
         if (pinOp1) pinOp1.wire.setValue(op1);
         if (pinSub) pinSub.wire.setValue(sub);
+    }
+
+    function readALUOutputs() {
+        const alu = cpu.meta.alu;
+        let result = 0;
+        for (let i = 0; i < 8; i++) {
+            const pin = alu.outputPins[`R${i}`];
+            if (pin && pin.wire.value) result |= (1 << i);
+        }
+        const zeroPin = alu.outputPins['Zero'];
+        const coutPin = alu.outputPins['Cout'];
+        return {
+            result,
+            zero: zeroPin ? zeroPin.wire.value : 0,
+            cout: coutPin ? coutPin.wire.value : 0,
+        };
     }
 
     function readDecoderOutputs() {
