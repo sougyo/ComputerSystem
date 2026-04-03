@@ -385,6 +385,32 @@ const CPUBuilder = (() => {
             comp.setOutputPin(`R${i}`, mux.children[i * 3 + 2].outputPins['Out'].wire, 520, 190 + i * 6);
         }
 
+        // Fix display wires at FA/HA1/HA2 levels so they light up correctly when zoomed in.
+        // Each level has orphaned input wires (created in buildHalfAdder/buildFullAdder) whose
+        // segments need to be on the actually-driven wires after all gate rewiring is done.
+        for (let j = 0; j < 8; j++) {
+            const faJ = adder.children[j];
+            const ha1J = faJ.children[0];
+            const ha2J = faJ.children[1];
+            const aluAWire = comp.inputPins[`A${j}`].wire;  // set by setALUInputs
+            const bInvWire = bInvWires[j];                   // B after XOR inversion
+            const cinWireJ = faJ.inputPins['Cin'].wire;      // Cin of this FA
+            const ha1SumWire = ha1J.gates[0].output;         // HA1 XOR output
+
+            [
+                [faJ.wires[0], aluAWire], [faJ.wires[1], bInvWire], [faJ.wires[2], cinWireJ],
+                [ha1J.wires[0], aluAWire], [ha1J.wires[1], bInvWire],
+                [ha2J.wires[0], ha1SumWire], [ha2J.wires[1], cinWireJ]
+            ].forEach(([disp, driven]) => {
+                if (disp === driven) return;
+                disp.segments.forEach(s => driven.segments.push(s));
+                disp.segments = [];
+            });
+            faJ.wires[0] = aluAWire; faJ.wires[1] = bInvWire; faJ.wires[2] = cinWireJ;
+            ha1J.wires[0] = aluAWire; ha1J.wires[1] = bInvWire;
+            ha2J.wires[0] = ha1SumWire; ha2J.wires[1] = cinWireJ;
+        }
+
         // Zero flag: NOR tree of all result bits
         const zeroTree = new Component('ZERO_DETECT', `${name}_zero`);
         zeroTree.x = 400; zeroTree.y = 190;
