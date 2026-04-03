@@ -312,10 +312,9 @@ class Renderer {
         // Too small to see
         if (screenW < this.MIN_VISIBLE && screenH < this.MIN_VISIBLE) return;
 
-        const isGate = comp.gates && comp.gates.length > 0 && comp.children.length === 0;
         const shouldExpand = screenW > this.EXPAND_THRESHOLD && (comp.children.length > 0 || comp.gates.length > 0);
 
-        if (shouldExpand && !isGate) {
+        if (shouldExpand) {
             // Show component background and label, then recurse into children
             this._drawComponentBackground(comp, absX, absY);
 
