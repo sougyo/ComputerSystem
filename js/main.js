@@ -499,6 +499,20 @@ const App = (() => {
             document.getElementById('helpOverlay').style.display = 'flex';
         });
 
+        // Collapsible panels
+        document.querySelectorAll('.panel h2').forEach(h2 => {
+            h2.addEventListener('click', () => {
+                h2.closest('.panel').classList.toggle('collapsed');
+            });
+        });
+
+        // Collapse panels by default on small screens
+        if (window.innerWidth < 600) {
+            ['sidebar', 'programPanel', 'memoryPanel'].forEach(id => {
+                document.getElementById(id).classList.add('collapsed');
+            });
+        }
+
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;

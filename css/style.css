@@ -339,6 +339,31 @@ body {
     font-family: inherit;
 }
 
+/* 折りたたみパネル */
+.panel h2 {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.panel h2::after {
+    content: '▾';
+    font-size: 11px;
+    opacity: 0.7;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+.panel.collapsed h2::after {
+    transform: rotate(-90deg);
+}
+.panel.collapsed .panel-body {
+    display: none;
+}
+.panel.collapsed {
+    overflow: hidden;
+}
+
 /* スクロールバー */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

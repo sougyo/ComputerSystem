@@ -12,30 +12,32 @@
     <!-- 左サイドバー: レジスタ・状態表示 -->
     <div id="sidebar" class="panel">
         <h2>CPU State</h2>
-        <div class="section">
-            <h3>Registers</h3>
-            <div class="reg-row"><span class="reg-name">A</span><span id="regA" class="reg-val">0x00</span><span id="regA-bin" class="reg-bin">00000000</span></div>
-            <div class="reg-row"><span class="reg-name">B</span><span id="regB" class="reg-val">0x00</span><span id="regB-bin" class="reg-bin">00000000</span></div>
-            <div class="reg-row"><span class="reg-name">PC</span><span id="regPC" class="reg-val">0x00</span><span id="regPC-bin" class="reg-bin">00000000</span></div>
-            <div class="reg-row"><span class="reg-name">IR</span><span id="regIR" class="reg-val">0x0000</span><span id="regIR-bin" class="reg-bin">----------------</span></div>
-        </div>
-        <div class="section">
-            <h3>Flags</h3>
-            <div class="flag-row">
-                <span class="flag" id="flagZ">Z=0</span>
-                <span class="flag" id="flagC">C=0</span>
-                <span class="flag" id="flagN">N=0</span>
+        <div class="panel-body">
+            <div class="section">
+                <h3>Registers</h3>
+                <div class="reg-row"><span class="reg-name">A</span><span id="regA" class="reg-val">0x00</span><span id="regA-bin" class="reg-bin">00000000</span></div>
+                <div class="reg-row"><span class="reg-name">B</span><span id="regB" class="reg-val">0x00</span><span id="regB-bin" class="reg-bin">00000000</span></div>
+                <div class="reg-row"><span class="reg-name">PC</span><span id="regPC" class="reg-val">0x00</span><span id="regPC-bin" class="reg-bin">00000000</span></div>
+                <div class="reg-row"><span class="reg-name">IR</span><span id="regIR" class="reg-val">0x0000</span><span id="regIR-bin" class="reg-bin">----------------</span></div>
             </div>
-        </div>
-        <div class="section">
-            <h3>Current Instruction</h3>
-            <div id="currentInstr" class="instr-display">---</div>
-            <div id="currentPhase" class="phase-display">IDLE</div>
-        </div>
-        <div class="section">
-            <h3>Zoom Level</h3>
-            <div id="zoomInfo" class="zoom-display">1.00x</div>
-            <div id="zoomHint" class="zoom-hint">Macro View: CPU Components</div>
+            <div class="section">
+                <h3>Flags</h3>
+                <div class="flag-row">
+                    <span class="flag" id="flagZ">Z=0</span>
+                    <span class="flag" id="flagC">C=0</span>
+                    <span class="flag" id="flagN">N=0</span>
+                </div>
+            </div>
+            <div class="section">
+                <h3>Current Instruction</h3>
+                <div id="currentInstr" class="instr-display">---</div>
+                <div id="currentPhase" class="phase-display">IDLE</div>
+            </div>
+            <div class="section">
+                <h3>Zoom Level</h3>
+                <div id="zoomInfo" class="zoom-display">1.00x</div>
+                <div id="zoomHint" class="zoom-hint">Macro View: CPU Components</div>
+            </div>
         </div>
     </div>
 
@@ -53,22 +55,26 @@
     <!-- 右サイドバー: プログラムエディタ -->
     <div id="programPanel" class="panel">
         <h2>Program</h2>
-        <select id="programSelect">
-            <option value="add">Addition (A+B)</option>
-            <option value="count">Count Up</option>
-            <option value="logic">Logic Ops</option>
-            <option value="fibonacci">Fibonacci</option>
-            <option value="custom">Custom</option>
-        </select>
-        <div id="programListing"></div>
-        <textarea id="customProgram" style="display:none" placeholder="LOAD_A 5&#10;LOAD_B 3&#10;ADD&#10;HLT"></textarea>
-        <button id="btnLoad">Load Program</button>
+        <div class="panel-body">
+            <select id="programSelect">
+                <option value="add">Addition (A+B)</option>
+                <option value="count">Count Up</option>
+                <option value="logic">Logic Ops</option>
+                <option value="fibonacci">Fibonacci</option>
+                <option value="custom">Custom</option>
+            </select>
+            <div id="programListing"></div>
+            <textarea id="customProgram" style="display:none" placeholder="LOAD_A 5&#10;LOAD_B 3&#10;ADD&#10;HLT"></textarea>
+            <button id="btnLoad">Load Program</button>
+        </div>
     </div>
 
     <!-- メモリビューア -->
     <div id="memoryPanel" class="panel">
         <h2>Memory</h2>
-        <div id="memoryView"></div>
+        <div class="panel-body">
+            <div id="memoryView"></div>
+        </div>
     </div>
 
     <!-- ヘルプオーバーレイ -->
