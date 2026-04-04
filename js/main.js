@@ -366,6 +366,17 @@ const App = (() => {
         if (readPin) readPin.wire.setValue(isLoad ? 1 : 0);
         if (writePin) writePin.wire.setValue(isStore ? 1 : 0);
 
+        // Light up the cell gate corresponding to the accessed address
+        // Row = addr[7:6], Col = addr[5:4] → 16 blocks of 16 bytes
+        if (mem.meta.cellOutWires) {
+            const row = (addr >> 6) & 3;
+            const col = (addr >> 4) & 3;
+            const isAccess = isLoad || isStore;
+            mem.meta.cellOutWires.forEach((w, idx) => {
+                w.setValue(isAccess && idx === row * 4 + col ? 1 : 0);
+            });
+        }
+
         // Drive address bus wires (PC → Memory visual connection)
         cpu.meta.addrBus.forEach((w, i) => w.setValue((addr >> i) & 1));
     }

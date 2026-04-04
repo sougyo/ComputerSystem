@@ -768,16 +768,18 @@ const CPUBuilder = (() => {
         // Internal storage (not gate-level - too many gates for 256 bytes)
         comp.meta.storage = new Uint8Array(256);
 
-        // Add some decorative gates to represent the memory array
+        // Add gates representing the memory cell array (4x4 = 16 blocks of 16 bytes each)
+        // Address bits [7:6] select row, bits [5:4] select column
+        comp.meta.cellOutWires = [];
         for (let row = 0; row < 4; row++) {
             for (let col = 0; col < 4; col++) {
                 const g = comp.addGate(createGate('AND', `${name}_cell_${row}_${col}`,
                     30 + col * 30, 30 + row * 50));
                 g.width = 20; g.height = 12;
-                // These are decorative - real memory is in meta.storage
                 const dummyIn = comp.addWire(createWire(`${name}_dummy_${row}_${col}`));
                 const dummyOut = comp.addWire(createWire(`${name}_dummyout_${row}_${col}`));
                 connectGate(g, [dummyIn], dummyOut);
+                comp.meta.cellOutWires.push(dummyOut); // index = row*4 + col
             }
         }
 
