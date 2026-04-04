@@ -312,7 +312,8 @@ class Renderer {
         // Too small to see
         if (screenW < this.MIN_VISIBLE && screenH < this.MIN_VISIBLE) return;
 
-        const shouldExpand = screenW > this.EXPAND_THRESHOLD && (comp.children.length > 0 || comp.gates.length > 0);
+        const expandThreshold = comp.expandThreshold || this.EXPAND_THRESHOLD;
+        const shouldExpand = screenW > expandThreshold && (comp.children.length > 0 || comp.gates.length > 0);
 
         if (shouldExpand) {
             // Show component background and label, then recurse into children
@@ -351,14 +352,23 @@ class Renderer {
         ctx.fill();
         ctx.stroke();
 
-        // Label
+        // Label (clamped to component width so it never overflows)
+        // Tall components (e.g. Register8, ALU) put the label at the bottom
+        // to avoid overlapping children that fill the top area.
         if (screenW > 60) {
             const fontSize = Math.max(4, Math.min(14, comp.height * 0.08));
             ctx.font = `bold ${fontSize}px Consolas, monospace`;
             ctx.fillStyle = comp.color + '80';
             ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-            ctx.fillText(comp.label, absX + 3 / this.zoom, absY + 2 / this.zoom);
+            const labelX = absX + 3 / this.zoom;
+            const maxLabelW = comp.width - 6 / this.zoom;
+            if (comp.height > 100) {
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(comp.label, labelX, absY + comp.height - 2 / this.zoom, maxLabelW);
+            } else {
+                ctx.textBaseline = 'top';
+                ctx.fillText(comp.label, labelX, absY + 2 / this.zoom, maxLabelW);
+            }
         }
     }
 
@@ -391,7 +401,7 @@ class Renderer {
             ctx.shadowBlur = 0;
         }
 
-        // Label
+        // Label (truncated to fit inside the component box)
         if (screenW > 25) {
             const fontSize = Math.min(comp.height * 0.35, comp.width * 0.15, 12);
             if (fontSize * this.zoom > 6) {
@@ -399,8 +409,18 @@ class Renderer {
                 ctx.fillStyle = '#fff';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                const label = comp.label || comp.type;
-                ctx.fillText(label, absX + comp.width / 2, absY + comp.height / 2);
+                let label = comp.label || comp.type;
+                const maxW = comp.width * 0.88;
+                if (ctx.measureText(label).width > maxW) {
+                    // Shorten until it fits (with ellipsis)
+                    while (label.length > 1 && ctx.measureText(label + '\u2026').width > maxW) {
+                        label = label.slice(0, -1);
+                    }
+                    label = label.length > 0 ? label + '\u2026' : '';
+                }
+                if (label) {
+                    ctx.fillText(label, absX + comp.width / 2, absY + comp.height / 2);
+                }
             }
         }
 

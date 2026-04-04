@@ -259,10 +259,14 @@ const CPUBuilder = (() => {
             const wIn3 = comp.addWire(createWire(`${name}_in3_${i}`));
 
             // Level 1: 2 MUX2 (select by sel0)
+            // Width capped to spacing (13) so boxes don't overlap inside MUX4_8bit
             const mux_a = comp.addChild(buildMux2(`${name}_m1a_${i}`, 10 + i * 13, 5));
+            mux_a.width = 12; mux_a.height = 10;
             const mux_b = comp.addChild(buildMux2(`${name}_m1b_${i}`, 10 + i * 13, 30));
+            mux_b.width = 12; mux_b.height = 10;
             // Level 2: 1 MUX2 (select by sel1)
             const mux_c = comp.addChild(buildMux2(`${name}_m2_${i}`, 10 + i * 13, 58));
+            mux_c.width = 12; mux_c.height = 10;
 
             // Rewire level 1
             _rewireMux2(mux_a, wIn0, wIn1, wSel0);
@@ -558,6 +562,9 @@ const CPUBuilder = (() => {
         comp.x = x || 0; comp.y = y || 0;
         comp.width = 60; comp.height = 28;
         comp.color = '#00cec9';
+        // Master and slave D_LATCHes overlap visually at intermediate zoom.
+        // Skip that view by requiring a larger screen size before expanding.
+        comp.expandThreshold = 180;
 
         const wD = comp.addWire(createWire(`${name}_D`));
         const wCLK = comp.addWire(createWire(`${name}_CLK`));
@@ -570,6 +577,7 @@ const CPUBuilder = (() => {
 
         // Master D-latch (transparent when CLK=1)
         const master = comp.addChild(buildDLatch(`${name}_master`, 5, 0));
+        master.label = 'Master';
         master.inputPins['D'].wire = wD;
         master.inputPins['EN'].wire = wCLK;
         // Rewire master internals
@@ -579,6 +587,7 @@ const CPUBuilder = (() => {
 
         // Slave D-latch (transparent when CLK=0 → EN=CLKbar)
         const slave = comp.addChild(buildDLatch(`${name}_slave`, 25, 0));
+        slave.label = 'Slave';
         const masterQ = master.outputPins['Q'].wire;
         slave.inputPins['D'].wire = masterQ;
         slave.inputPins['EN'].wire = wClkBar;
@@ -610,6 +619,7 @@ const CPUBuilder = (() => {
 
         for (let i = 0; i < 8; i++) {
             const dff = comp.addChild(buildDFF(`${name}_DFF${i}`, 8, 5 + i * 28));
+            dff.label = `D${i}`;
             const wD = comp.addWire(createWire(`${name}_D${i}`));
 
             dff.inputPins['D'].wire = wD;
