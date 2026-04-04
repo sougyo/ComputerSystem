@@ -304,14 +304,8 @@ const App = (() => {
             flagC = subOp ? (1 - aluOut.cout) : aluOut.cout;
         }
 
-        // === WRITE-BACK ===
-        if (writeA) {
-            regA = result;
-            setRegisterOutputs(cpu.meta.regA, regA);
-        }
-        if (writeB) {
-            setRegisterOutputs(cpu.meta.regB, regB);
-        }
+        // === WRITE-BACK (JS state only) ===
+        if (writeA) regA = result;
 
         // Update flags
         if (writeA) {
@@ -321,20 +315,19 @@ const App = (() => {
 
         // Update PC
         pc = nextPC & 0xFF;
-        setRegisterOutputs(cpu.meta.pc.children[0], pc);
-
-        // Set PC output wires
-        for (let i = 0; i < 8; i++) {
-            const pin = cpu.meta.pc.outputPins[`Q${i}`];
-            if (pin) pin.wire.setValue((pc >> i) & 1);
-        }
 
         // Final circuit evaluation
         circuit.evaluate();
 
-        // Update IR display (must be after all evaluate() calls to avoid NAND overwrite)
+        // Update all register/PC/IR displays AFTER evaluate() to prevent NAND gate overwrite
+        setRegisterOutputs(cpu.meta.regA, regA);
+        setRegisterOutputs(cpu.meta.regB, regB);
+        setRegisterOutputs(cpu.meta.pc.children[0], pc);
         setRegisterOutputs(cpu.meta.ir, irOpcode);
         setRegisterOutputs(cpu.meta.irL, irOperand);
+
+        // Update memory address/data bus display
+        setMemoryDisplay(irOpcode, irOperand);
 
         updateUI();
     }
@@ -351,6 +344,30 @@ const App = (() => {
             const pin = reg.outputPins[`Q${i}`];
             if (pin) pin.wire.setValue((value >> i) & 1);
         }
+    }
+
+    function setMemoryDisplay(opcode, operand) {
+        const mem = cpu.meta.memory;
+        const isLoad = opcode === OP.LOAD_A_MEM;
+        const isStore = opcode === OP.STORE_A;
+        const addr = (isLoad || isStore) ? operand : pc;
+        const data = memory[addr] || 0;
+
+        for (let i = 0; i < 8; i++) {
+            const addrPin = mem.inputPins[`Addr${i}`];
+            if (addrPin) addrPin.wire.setValue((addr >> i) & 1);
+            const doutPin = mem.outputPins[`Dout${i}`];
+            if (doutPin) doutPin.wire.setValue((data >> i) & 1);
+            const dinPin = mem.inputPins[`Din${i}`];
+            if (dinPin) dinPin.wire.setValue(isStore ? (regA >> i) & 1 : 0);
+        }
+        const readPin = mem.inputPins['Read'];
+        const writePin = mem.inputPins['Write'];
+        if (readPin) readPin.wire.setValue(isLoad ? 1 : 0);
+        if (writePin) writePin.wire.setValue(isStore ? 1 : 0);
+
+        // Drive address bus wires (PC → Memory visual connection)
+        cpu.meta.addrBus.forEach((w, i) => w.setValue((addr >> i) & 1));
     }
 
     function setALUInputs(a, b, opcode) {
